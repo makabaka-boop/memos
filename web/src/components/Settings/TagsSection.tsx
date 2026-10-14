@@ -1,6 +1,6 @@
 import { create } from "@bufbuild/protobuf";
 import { isEqual } from "lodash-es";
-import { EyeOffIcon, PaletteIcon, PlusIcon, TagIcon, TrashIcon } from "lucide-react";
+import { CircleCheckIcon, EyeIcon, EyeOffIcon, FlaskConicalIcon, InfoIcon, PaletteIcon, PlusIcon, TagIcon, TrashIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTagCounts, useUpdateUserSetting } from "@/hooks/useUserQueries";
-import { colorToHex } from "@/lib/color";
+import { colorToHex, tagColorDeclarations } from "@/lib/color";
+import { tagStyles } from "@/lib/markdownStyles";
 import { buildUserSettingName } from "@/lib/resource-names";
-import { isValidTagPattern } from "@/lib/tag";
+import { isValidTagPattern, resolveTagRule } from "@/lib/tag";
 import { cn } from "@/lib/utils";
 import {
   UserSetting_Key,
@@ -48,6 +49,20 @@ const toLocalTagMeta = (meta: {
   blur: meta.blurContent,
 });
 
+// Builds the proto tags setting represented by the local (possibly unsaved) edits.
+const buildTagsSetting = (tags: Record<string, LocalTagMeta>) =>
+  create(UserSetting_TagsSettingSchema, {
+    tags: Object.fromEntries(
+      Object.entries(tags).map(([name, meta]) => [
+        name,
+        create(UserSetting_TagMetadataSchema, {
+          blurContent: meta.blur,
+          ...(meta.color ? { backgroundColor: hexToColor(meta.color) } : {}),
+        }),
+      ]),
+    ),
+  });
+
 const TagsSection = () => {
   const t = useTranslate();
   const { currentUser, userTagsSetting, refetchSettings } = useAuth();
@@ -62,6 +77,7 @@ const TagsSection = () => {
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState<string | undefined>(undefined);
   const [newTagBlur, setNewTagBlur] = useState(false);
+  const [trialTag, setTrialTag] = useState("");
 
   // Sync local state when the fetched setting arrives (the fetch is async and
   // completes after mount, so localTags would be empty without this sync).
@@ -89,6 +105,20 @@ const TagsSection = () => {
     [originalSetting.tags],
   );
   const hasChanges = !isEqual(localTags, originalMetaMap);
+
+  // The current edits as a proto setting, so the trial resolves rules exactly
+  // like the app would after saving.
+  const localTagsSetting = useMemo(() => buildTagsSetting(localTags), [localTags]);
+
+  // Trial resolution: a leading '#' is tolerated so "#work" and "work" match alike.
+  const trialTagName = trialTag.trim().replace(/^#+/, "");
+  const trialRule = useMemo(
+    () => (trialTagName ? resolveTagRule(trialTagName, localTagsSetting) : undefined),
+    [trialTagName, localTagsSetting],
+  );
+  const trialColor = colorToHex(trialRule?.metadata.backgroundColor);
+  const trialColorStyle = tagColorDeclarations(trialColor);
+  const trialBlur = trialRule?.metadata.blurContent === true;
 
   const handleColorChange = (tagName: string, hex: string) => {
     setLocalTags((prev) => ({ ...prev, [tagName]: { ...prev[tagName], color: hex } }));
@@ -128,16 +158,6 @@ const TagsSection = () => {
   };
 
   const handleSave = async () => {
-    const tags = Object.fromEntries(
-      Object.entries(localTags).map(([name, meta]) => [
-        name,
-        create(UserSetting_TagMetadataSchema, {
-          blurContent: meta.blur,
-          ...(meta.color ? { backgroundColor: hexToColor(meta.color) } : {}),
-        }),
-      ]),
-    );
-
     if (!currentUser) {
       return;
     }
@@ -147,7 +167,7 @@ const TagsSection = () => {
         name: buildUserSettingName(currentUser.name, UserSetting_Key.TAGS),
         value: {
           case: "tagsSetting",
-          value: create(UserSetting_TagsSettingSchema, { tags }),
+          value: buildTagsSetting(localTags),
         },
       }),
       updateMask: ["tags"],
@@ -275,6 +295,80 @@ const TagsSection = () => {
             </>
           )}
         </SettingList>
+
+        <SettingPanel
+          header={
+            <div className="flex items-center gap-2">
+              <FlaskConicalIcon className="size-3.5 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{t("setting.tags.try-title")}</span>
+            </div>
+          }
+          footer={<span className="text-xs text-muted-foreground">{t("setting.tags.try-description")}</span>}
+        >
+          <div className="flex flex-col gap-3 px-3 py-3">
+            <Input
+              className="font-mono"
+              placeholder={t("setting.tags.try-placeholder")}
+              value={trialTag}
+              onChange={(e) => setTrialTag(e.target.value)}
+              list="trial-tags"
+            />
+            <datalist id="trial-tags">
+              {allKnownTags.map((tag) => (
+                <option key={tag} value={tag} />
+              ))}
+            </datalist>
+
+            {trialTagName && (
+              <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/20 px-3 py-2.5">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <span className="text-xs text-muted-foreground">{t("setting.tags.appearance")}</span>
+                  <span className={cn("mbe-tag", tagStyles.base, !trialColorStyle && tagStyles.defaultColor)} style={trialColorStyle}>
+                    #{trialTagName}
+                  </span>
+                  {!trialColor && <span className="text-xs text-muted-foreground">{t("setting.tags.default-color")}</span>}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  {trialRule ? (
+                    <>
+                      <CircleCheckIcon className="size-3.5 shrink-0 text-primary" />
+                      <span className="text-muted-foreground">{t("setting.tags.matched-rule")}</span>
+                      <span className="rounded bg-background px-1.5 py-0.5 font-mono text-foreground border border-border">
+                        {trialRule.pattern}
+                      </span>
+                      {trialRule.pattern !== trialTagName && (
+                        <span className="text-muted-foreground">({t("setting.tags.matching-rule")})</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <InfoIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                      <span className="text-muted-foreground">{t("setting.tags.no-rule-match")}</span>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                  {trialBlur ? (
+                    <EyeOffIcon className="size-3.5 shrink-0 text-foreground" />
+                  ) : (
+                    <EyeIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                  )}
+                  <span className={trialBlur ? "text-foreground" : "text-muted-foreground"}>
+                    {trialBlur ? t("setting.tags.content-blurred") : t("setting.tags.content-not-blurred")}
+                  </span>
+                </div>
+
+                {/* Sample note lines blurred exactly like a matching memo would be. */}
+                <div className="flex flex-col gap-1.5 pt-0.5" aria-hidden>
+                  <div className={cn("h-2 w-4/5 rounded bg-muted-foreground/20", trialBlur && "blur-[4px]")} />
+                  <div className={cn("h-2 w-3/5 rounded bg-muted-foreground/20", trialBlur && "blur-[4px]")} />
+                </div>
+              </div>
+            )}
+          </div>
+        </SettingPanel>
       </SettingGroup>
 
       <div className="w-full flex justify-end">

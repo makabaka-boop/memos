@@ -22,7 +22,7 @@ import {
   tags,
 } from "@usememos/editor";
 import { ensureHighlightTheme, highlightLoadedCode, loadHighlighter } from "@/lib/code-highlight";
-import { colorToHex } from "@/lib/color";
+import { colorToHex, tagColorStyleText } from "@/lib/color";
 import { headingTypeClass, markdownStyles, mentionStyles, tagStyles } from "@/lib/markdownStyles";
 import { findTagMetadata } from "@/lib/tag";
 import { cn } from "@/lib/utils";
@@ -162,9 +162,7 @@ const renderHtml: SyntaxView = (source, element, kind) => {
  */
 function tagColorStyle(tag: string, tagsSetting: UserSetting_TagsSetting | undefined): string | undefined {
   const metadata = tagsSetting ? findTagMetadata(tag, tagsSetting) : undefined;
-  const bgHex = colorToHex(metadata?.backgroundColor);
-  if (!bgHex) return undefined;
-  return `border-color: ${bgHex}; color: color-mix(in srgb, ${bgHex} 60%, black); background-color: color-mix(in srgb, ${bgHex} 15%, transparent)`;
+  return tagColorStyleText(colorToHex(metadata?.backgroundColor));
 }
 
 // `mbe-tag` is the editor's own class; the memo view finds tags by it.

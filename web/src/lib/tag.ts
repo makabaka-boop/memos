@@ -26,30 +26,44 @@ const getCompiledPattern = (pattern: string): RegExp | null => {
   return re;
 };
 
+/** A tag rule (its key/pattern plus metadata) resolved for a concrete tag name. */
+export interface ResolvedTagRule {
+  /** The rule key that matched: the tag name itself, or a regex pattern. */
+  pattern: string;
+  metadata: UserSetting_TagMetadata;
+}
+
 /**
- * Finds the first matching TagMetadata for a given tag name by treating each
- * key in tagsSetting.tags as an anchored regex pattern (^pattern$).
+ * Finds the rule that decides how a given tag name looks.
  *
  * Lookup order:
- * 1. Exact key match (O(1) fast path, backward-compatible).
- * 2. Iterate all keys and test as anchored regex — first match wins.
+ * 1. Exact key match (O(1) fast path, backward-compatible) — a rule with the
+ *    same name as the tag always wins.
+ * 2. Iterate all keys as anchored regex patterns (^pattern$) in object order —
+ *    the first full tag-name match wins.
  */
-export const findTagMetadata = (tag: string, tagsSetting: UserSetting_TagsSetting): UserSetting_TagMetadata | undefined => {
+export const resolveTagRule = (tag: string, tagsSetting: UserSetting_TagsSetting): ResolvedTagRule | undefined => {
   // Fast path: exact match.
   if (Object.hasOwn(tagsSetting.tags, tag)) {
-    return tagsSetting.tags[tag];
+    return { pattern: tag, metadata: tagsSetting.tags[tag] };
   }
 
   // Regex path: treat each key as an anchored pattern.
   for (const [pattern, metadata] of Object.entries(tagsSetting.tags)) {
-    const re = getCompiledPattern(pattern);
-    if (re?.test(tag)) {
-      return metadata;
+    if (getCompiledPattern(pattern)?.test(tag)) {
+      return { pattern, metadata };
     }
   }
 
   return undefined;
 };
+
+/**
+ * Finds the first matching TagMetadata for a given tag name. See resolveTagRule
+ * for the lookup order; returns undefined when no rule matches.
+ */
+export const findTagMetadata = (tag: string, tagsSetting: UserSetting_TagsSetting): UserSetting_TagMetadata | undefined =>
+  resolveTagRule(tag, tagsSetting)?.metadata;
 
 /**
  * Returns true if the given string is a valid, ReDoS-safe JavaScript regex pattern.

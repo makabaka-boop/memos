@@ -843,7 +843,15 @@
       "tag-already-exists": "התגית כבר קיימת.",
       "tag-pattern-hint": "שם תגית או דפוס ביטוי רגולרי (לדוגמה, project/.* תואם לכל תגיות project/)",
       "invalid-regex": "דפוס הביטוי הרגולרי אינו תקין או אינו בטוח.",
-      "used-count": "{{count}} פתקים"
+      "used-count": "{{count}} פתקים",
+      "appearance": "Appearance",
+      "content-blurred": "Note content is blurred",
+      "content-not-blurred": "Note content is not blurred",
+      "matched-rule": "Matched rule",
+      "no-rule-match": "No rule matches this tag — the default color is used and notes are not blurred.",
+      "try-description": "Preview the rule a tag hits with your current unsaved changes. This never saves settings or changes how notes are displayed.",
+      "try-placeholder": "Enter a tag name to preview",
+      "try-title": "Try a tag"
     },
     "resource-stats": {
       "label": "משאבים",

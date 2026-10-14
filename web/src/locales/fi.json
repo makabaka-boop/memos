@@ -810,7 +810,15 @@
       "tag-already-exists": "Tunniste on jo olemassa.",
       "tag-pattern-hint": "Tunnisteen nimi tai säännöllinen lausekemalli (esim. projekti/.* vastaa kaikkia projekteja/tageja)",
       "invalid-regex": "Virheellinen tai vaarallinen regex-malli.",
-      "used-count": "{{count}} muistiot"
+      "used-count": "{{count}} muistiot",
+      "appearance": "Appearance",
+      "content-blurred": "Note content is blurred",
+      "content-not-blurred": "Note content is not blurred",
+      "matched-rule": "Matched rule",
+      "no-rule-match": "No rule matches this tag — the default color is used and notes are not blurred.",
+      "try-description": "Preview the rule a tag hits with your current unsaved changes. This never saves settings or changes how notes are displayed.",
+      "try-placeholder": "Enter a tag name to preview",
+      "try-title": "Try a tag"
     },
     "resource-stats": {
       "label": "Resurssit",

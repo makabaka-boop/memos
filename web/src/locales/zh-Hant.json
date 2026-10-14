@@ -932,7 +932,15 @@
       "tag-already-exists": "標籤已經存在。",
       "tag-pattern-hint": "標籤名稱或正規表示式模式（例如 project/.* 符合所有 project/ 標籤）",
       "invalid-regex": "無效或不安全的正規表示式模式。",
-      "used-count": "{{count}} 篇備忘錄"
+      "used-count": "{{count}} 篇備忘錄",
+      "appearance": "標籤外觀",
+      "content-blurred": "筆記內容將被模糊",
+      "content-not-blurred": "筆記內容不會模糊",
+      "matched-rule": "命中規則",
+      "no-rule-match": "沒有規則符合該標籤，將使用預設顏色，筆記不會模糊。",
+      "try-description": "預覽標籤在目前未儲存設定下命中的規則。試用不會儲存設定，也不會改變筆記的實際顯示。",
+      "try-placeholder": "輸入標籤名進行預覽",
+      "try-title": "試用標籤"
     },
     "resource-stats": {
       "label": "資源",

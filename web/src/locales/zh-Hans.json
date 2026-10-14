@@ -763,7 +763,15 @@
       "tag-already-exists": "标签已经存在。",
       "tag-pattern-hint": "标签名称或正则表达式模式（例如 project/.* 匹配所有 project/ 标签）",
       "invalid-regex": "无效或不安全的正则表达式模式。",
-      "used-count": "{{count}} 条备忘录"
+      "used-count": "{{count}} 条备忘录",
+      "appearance": "标签外观",
+      "content-blurred": "笔记内容将被模糊",
+      "content-not-blurred": "笔记内容不会模糊",
+      "matched-rule": "命中规则",
+      "no-rule-match": "没有规则匹配该标签，将使用默认颜色，笔记不会模糊。",
+      "try-description": "预览标签在当前未保存设置下命中的规则。试用不会保存设置，也不会改变笔记的实际显示。",
+      "try-placeholder": "输入标签名进行预览",
+      "try-title": "试用标签"
     },
     "notification": {
       "email-description": "备忘评论和提及时发送邮件副本。Gmail 可使用 smtp.gmail.com，端口 587 并开启 STARTTLS。",

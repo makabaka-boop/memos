@@ -1,3 +1,31 @@
+/** Inline CSS declarations used to paint a tag pill with a custom color. */
+export interface TagColorStyle {
+  borderColor: string;
+  color: string;
+  backgroundColor: string;
+}
+
+/**
+ * Builds the inline CSS declarations used by a colored tag pill: a lightly
+ * tinted background with a darkened variant of the same color for border and
+ * text, mirroring how tags render inside memo content. Returns undefined for
+ * the theme-default pill.
+ */
+export const tagColorDeclarations = (hex?: string): TagColorStyle | undefined => {
+  if (!hex) return undefined;
+  return {
+    borderColor: hex,
+    color: `color-mix(in srgb, ${hex} 60%, black)`,
+    backgroundColor: `color-mix(in srgb, ${hex} 15%, transparent)`,
+  };
+};
+
+/** Same declarations as an inline CSS string, for HTML attributes. */
+export const tagColorStyleText = (hex?: string): string | undefined => {
+  const style = tagColorDeclarations(hex);
+  return style ? `border-color: ${style.borderColor}; color: ${style.color}; background-color: ${style.backgroundColor}` : undefined;
+};
+
 /**
  * Converts a google.type.Color (r/g/b as 0–1 floats) to a CSS hex string (#rrggbb).
  * Returns undefined when no color is provided.
